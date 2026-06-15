@@ -1,0 +1,487 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>?? Daily Wellness Planner</title>
+
+<style>
+:root{
+    --primary:#ff69b4;
+    --secondary:#f8d7ff;
+    --success:#2ecc71;
+    --bg:#fffafc;
+    --card:#ffffff;
+    --text:#333;
+}
+
+.dark{
+    --bg:#121212;
+    --card:#1f1f1f;
+    --text:#ffffff;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    padding:20px;
+    transition:.3s;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    color:var(--primary);
+    margin-bottom:20px;
+}
+
+.card{
+    background:var(--card);
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 10px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:15px;
+}
+
+.stat{
+    background:var(--secondary);
+    padding:15px;
+    border-radius:12px;
+    text-align:center;
+}
+
+.stat h2{
+    color:var(--primary);
+}
+
+button{
+    background:var(--primary);
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+.calendar-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:5px;
+}
+
+.day-name{
+    background:#ddd;
+    text-align:center;
+    padding:10px;
+    border-radius:5px;
+    font-weight:bold;
+}
+
+.day{
+    padding:12px;
+    text-align:center;
+    background:#eee;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.day:hover{
+    background:#d9f3ff;
+}
+
+.active{
+    background:var(--primary)!important;
+    color:white;
+}
+
+.completed{
+    background:#2ecc71!important;
+    color:white;
+}
+
+.partial{
+    background:#f1c40f!important;
+    color:black;
+}
+
+.task{
+    padding:10px;
+    margin-bottom:8px;
+    background:#f6f6f6;
+    border-radius:8px;
+}
+
+.progress-bar{
+    width:100%;
+    background:#ddd;
+    border-radius:20px;
+    overflow:hidden;
+    height:20px;
+    margin-top:10px;
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    background:#2ecc71;
+}
+
+.water-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.water-grid label{
+    background:#e8f8ff;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+}
+
+@media(max-width:768px){
+    .calendar{
+        font-size:12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>?? Daily Wellness Planner</h1>
+
+<div style="text-align:right;margin-bottom:15px;">
+<button onclick="toggleDarkMode()">?? Dark Mode</button>
+</div>
+
+<div class="card dashboard">
+    <div class="stat">
+        <h2 id="streak">0</h2>
+        <p>?? Streak</p>
+    </div>
+
+    <div class="stat">
+        <h2 id="completed">0</h2>
+        <p>? Completed</p>
+    </div>
+
+    <div class="stat">
+        <h2 id="pending">0</h2>
+        <p>?? Pending</p>
+    </div>
+
+    <div class="stat">
+        <h2 id="percentage">0%</h2>
+        <p>?? Progress</p>
+    </div>
+</div>
+
+<div class="card">
+<h2>?? Monthly Calendar</h2>
+
+<div class="calendar-header">
+<button onclick="prevMonth()">?</button>
+<h3 id="monthYear"></h3>
+<button onclick="nextMonth()">?</button>
+</div>
+
+<div class="calendar" id="calendar"></div>
+</div>
+
+<div class="card">
+<h2 id="selectedDate">Today's Tasks</h2>
+<br>
+<div id="tasks"></div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+
+<p style="margin-top:10px;" id="progressText"></p>
+</div>
+
+<div class="card">
+<h2>?? Water Intake Tracker</h2>
+<br>
+
+<div class="water-grid" id="waterTracker"></div>
+
+<p style="margin-top:15px;" id="waterProgress"></p>
+</div>
+
+</div>
+
+<script>
+
+let currentDate = new Date();
+let selectedDate = new Date();
+
+function getTasks(date){
+
+const day=date.getDay();
+
+let tasks=[
+"Face Pack",
+"Kumkumadi Oil",
+"Face Scrub",
+
+"Hot Water",
+"Morning Drink",
+"Dates Syrup",
+
+"Listen Vel Maral",
+"Morning Yoga",
+"Dress Washing"
+];
+
+if(day===0 || day===3 || day===6)
+tasks.push("Hair Oiling");
+
+if(day===1 || day===2 || day===5)
+tasks.push("Hair Wash");
+
+if(day===2 || day===5)
+tasks.push("Hair Pack");
+
+if(day===1 || day===3 || day===6)
+tasks.push("Pedicure");
+
+return tasks;
+}
+
+function key(date){
+return date.toISOString().split('T')[0];
+}
+
+function saveTask(task,status){
+
+let data=JSON.parse(localStorage.getItem(key(selectedDate)))||{};
+data[task]=status;
+
+localStorage.setItem(
+key(selectedDate),
+JSON.stringify(data)
+);
+
+renderTasks();
+}
+
+function renderTasks(){
+
+const taskDiv=document.getElementById("tasks");
+taskDiv.innerHTML="";
+
+let tasks=getTasks(selectedDate);
+
+let data=
+JSON.parse(localStorage.getItem(key(selectedDate)))||{};
+
+tasks.forEach(task=>{
+
+const div=document.createElement("div");
+div.className="task";
+
+div.innerHTML=`
+<label>
+<input type="checkbox"
+${data[task]?"checked":""}
+onchange="saveTask('${task}',this.checked)">
+${task}
+</label>
+`;
+
+taskDiv.appendChild(div);
+
+});
+
+updateDashboard();
+}
+
+function updateDashboard(){
+
+let tasks=getTasks(selectedDate);
+
+let data=
+JSON.parse(localStorage.getItem(key(selectedDate)))||{};
+
+let completed=
+tasks.filter(t=>data[t]).length;
+
+let pending=
+tasks.length-completed;
+
+let percent=
+Math.round((completed/tasks.length)*100)||0;
+
+document.getElementById("completed").innerText=completed;
+document.getElementById("pending").innerText=pending;
+document.getElementById("percentage").innerText=percent+"%";
+
+document.getElementById("progressFill").style.width=
+percent+"%";
+
+document.getElementById("progressText").innerText=
+completed+" of "+tasks.length+" tasks completed";
+}
+
+function renderCalendar(){
+
+const calendar=document.getElementById("calendar");
+calendar.innerHTML="";
+
+const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+days.forEach(d=>{
+let div=document.createElement("div");
+div.className="day-name";
+div.innerText=d;
+calendar.appendChild(div);
+});
+
+const month=currentDate.getMonth();
+const year=currentDate.getFullYear();
+
+document.getElementById("monthYear").innerText=
+currentDate.toLocaleString('default',{
+month:'long',
+year:'numeric'
+});
+
+const firstDay=new Date(year,month,1).getDay();
+const totalDays=new Date(year,month+1,0).getDate();
+
+for(let i=0;i<firstDay;i++){
+calendar.appendChild(document.createElement("div"));
+}
+
+for(let d=1;d<=totalDays;d++){
+
+const date=new Date(year,month,d);
+
+const div=document.createElement("div");
+div.className="day";
+div.innerText=d;
+
+if(date.toDateString()===selectedDate.toDateString()){
+div.classList.add("active");
+}
+
+div.onclick=()=>{
+selectedDate=date;
+document.getElementById("selectedDate").innerText=
+selectedDate.toDateString();
+renderCalendar();
+renderTasks();
+};
+
+calendar.appendChild(div);
+}
+}
+
+function prevMonth(){
+currentDate.setMonth(currentDate.getMonth()-1);
+renderCalendar();
+}
+
+function nextMonth(){
+currentDate.setMonth(currentDate.getMonth()+1);
+renderCalendar();
+}
+
+function toggleDarkMode(){
+document.body.classList.toggle("dark");
+}
+
+function renderWaterTracker(){
+
+const water=document.getElementById("waterTracker");
+
+for(let i=1;i<=8;i++){
+
+const label=document.createElement("label");
+
+label.innerHTML=`
+<input type="checkbox"
+onchange="updateWater()">
+ Glass ${i}
+`;
+
+water.appendChild(label);
+}
+}
+
+function updateWater(){
+
+const checks=
+document.querySelectorAll("#waterTracker input:checked").length;
+
+document.getElementById("waterProgress").innerText=
+"?? "+checks+"/8 Glasses Completed";
+}
+
+function calculateStreak(){
+
+let streak=0;
+
+for(let i=0;i<365;i++){
+
+let d=new Date();
+d.setDate(d.getDate()-i);
+
+let data=
+JSON.parse(localStorage.getItem(key(d)))||{};
+
+if(Object.keys(data).length>0)
+streak++;
+else
+break;
+}
+
+document.getElementById("streak").innerText=streak;
+}
+
+document.getElementById("selectedDate").innerText=
+selectedDate.toDateString();
+
+renderCalendar();
+renderTasks();
+renderWaterTracker();
+calculateStreak();
+
+</script>
+
+</body>
+</html>
+```
